@@ -1,0 +1,41 @@
+<div th:fragment="tenants">
+    <table th:if="${tenants != null && !tenants.isEmpty()}">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Roommate Of</th>
+                <th>Property</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="tenant : ${tenants}">
+                <td th:text="${tenant.id}"></td>
+                <td th:text="${tenant.firstName + ' ' + tenant.lastName}"></td>
+                <td th:text="${tenant.email}"></td>
+                <td th:text="${tenant.phone}"></td>
+                <td th:text="${tenant.roommateOf != null ? tenant.roommateOf : 'N/A'}"></td>
+                <td th:text="${tenant.propertyName != null ? tenant.propertyName : 'Not Assigned'}"></td>
+                <td>
+                    <a th:href="@{'http://localhost:8083/tenants/' + ${tenant.id}}" class="btn btn-primary">View</a>
+                    <a th:href="@{'http://localhost:8083/tenants/' + ${tenant.id} + '/edit'}" class="btn btn-primary">Edit</a>
+                    <form th:action="@{'/dashboard/admin/tenants/' + ${tenant.id} + '/assign-property'}" method="post" style="display: inline-block; margin-left: 5px;">
+                        <select name="propertyId" required style="padding: 5px; margin-right: 5px;">
+                            <option value="">Select Property</option>
+                            <option th:each="property : ${properties}" 
+                                    th:value="${property.id}" 
+                                    th:text="${property.name + ' - ' + property.address}"
+                                    th:selected="${tenant.propertyId != null && tenant.propertyId == property.id}">
+                            </option>
+                        </select>
+                        <button type="submit" class="btn" style="background-color: #28a745; color: white; padding: 5px 10px;">Assign</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+

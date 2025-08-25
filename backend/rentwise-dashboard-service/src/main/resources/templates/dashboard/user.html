@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard - RentWise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .nav {
+            margin-top: 10px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .status-approved {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-rejected {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>User Dashboard</h1>
+        <div class="nav">
+            <a href="/dashboard/user">Dashboard</a>
+            <a href="/dashboard/home">Home</a>
+            <a href="/dashboard/logout">Logout</a>
+        </div>
+    </div>
+    
+    <!-- Store user ID for JavaScript -->
+    <script th:inline="javascript">
+        var currentUserId = /*[[${user.id}]]*/ null;
+    </script>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- My Properties Section -->
+    <div class="section">
+        <h2>My Properties</h2>
+        <p th:if="${properties == null || properties.isEmpty()}">No properties assigned yet.</p>
+        
+        <table th:if="${properties != null && !properties.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>Type</th>
+                    <th>Rent Amount</th>
+                    <th>Status</th>
+                    <th>Tenants</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="property : ${properties}">
+                    <td th:text="${property.id}"></td>
+                    <td th:text="${property.name}"></td>
+                    <td th:text="${property.address}"></td>
+                    <td th:text="${property.city}"></td>
+                    <td th:text="${property.type}"></td>
+                    <td th:text="${property.rentAmount}"></td>
+                    <td th:text="${property.status}"></td>
+                    <td th:text="${property.tenantCount != null ? property.tenantCount : 0}"></td>
+                    <td>
+                        <a th:href="@{'http://localhost:8082/properties/' + ${property.id}}" class="btn btn-primary">View</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- My Roommates Section -->
+    <div class="section">
+        <h2>My Roommates</h2>
+        <a href="/dashboard/user/tenants/request" class="btn btn-primary">Request New Roommate</a>
+        <div id="roommates-container">
+            <p th:if="${tenants == null || tenants.isEmpty()}">No roommates yet. Request a roommate to get started!</p>
+            
+            <table th:if="${tenants != null && !tenants.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Property</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="tenant : ${tenants}">
+                        <td th:text="${tenant.id}"></td>
+                        <td th:text="${tenant.firstName + ' ' + tenant.lastName}"></td>
+                        <td th:text="${tenant.email}"></td>
+                        <td th:text="${tenant.phone}"></td>
+                        <td th:text="${tenant.propertyName != null ? tenant.propertyName : 'N/A'}"></td>
+                        <td>
+                            <a th:href="@{'http://localhost:8083/tenants/' + ${tenant.id}}" class="btn btn-primary">View</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- My Tenant Requests Section -->
+    <div class="section">
+        <h2>My Tenant Requests</h2>
+        <div id="requests-container">
+            <p th:if="${requests == null || requests.isEmpty()}">No requests submitted yet.</p>
+            
+            <table th:if="${requests != null && !requests.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Requested Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="request : ${requests}">
+                        <td th:text="${request.id}"></td>
+                        <td th:text="${request.firstName + ' ' + request.lastName}"></td>
+                        <td th:text="${request.email}"></td>
+                        <td th:text="${request.phone}"></td>
+                        <td>
+                            <span th:classappend="${'status-' + request.status.toLowerCase()}" 
+                                  class="status-badge" 
+                                  th:text="${request.status}"></span>
+                        </td>
+                        <td th:text="${request.createdAt}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- WebSocket Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2/lib/stomp.min.js"></script>
+    <script>
+        (function() {
+            console.log('Current User ID:', currentUserId, 'Type:', typeof currentUserId);
+            const socket = new SockJS('/ws');
+            const stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket Connected: ' + frame);
+                
+                stompClient.subscribe('/topic/notifications', function(message) {
+                    const event = JSON.parse(message.body);
+                    console.log('Received notification:', event);
+                    console.log('Event requestedByUserId:', event.requestedByUserId, 'Type:', typeof event.requestedByUserId);
+                    console.log('Current userId:', currentUserId, 'Type:', typeof currentUserId);
+                    
+                    // Convert both to numbers for comparison
+                    const eventUserId = Number(event.requestedByUserId);
+                    const currentUser = Number(currentUserId);
+                    
+                    console.log('Comparison - eventUserId:', eventUserId, 'currentUser:', currentUser, 'Match:', eventUserId === currentUser);
+                    
+                    // Only process events for this user
+                    if (eventUserId === currentUser) {
+                        console.log('Processing event for current user');
+                        if (event.status === 'APPROVED') {
+                            console.log('Refreshing roommates and requests for APPROVED event');
+                            // Refresh roommates and requests sections
+                            refreshRoommates();
+                            refreshRequests();
+                        } else if (event.status === 'REJECTED') {
+                            console.log('Refreshing requests for REJECTED event');
+                            // Refresh requests section
+                            refreshRequests();
+                        }
+                    } else {
+                        console.log('Event not for current user, ignoring');
+                    }
+                    // CREATED events are already shown (user just submitted)
+                });
+            }, function(error) {
+                console.error('WebSocket connection error:', error);
+            });
+            
+            function refreshRoommates() {
+                fetch('/dashboard/user/roommates')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('roommates-container').innerHTML = html;
+                    })
+                    .catch(error => console.error('Error refreshing roommates:', error));
+            }
+            
+            function refreshRequests() {
+                fetch('/dashboard/user/requests')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('requests-container').innerHTML = html;
+                    })
+                    .catch(error => console.error('Error refreshing requests:', error));
+            }
+        })();
+    </script>
+</body>
+</html>
+

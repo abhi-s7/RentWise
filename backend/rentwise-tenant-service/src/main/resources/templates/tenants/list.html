@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenants - RentWise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 20px;">
+            <a href="http://localhost:8084/dashboard/home" class="btn" style="background-color: #28a745;">← Back to Dashboard</a>
+        </div>
+        <h1>Tenants Management</h1>
+        
+        <div th:if="${param.success}" class="alert alert-success">
+            Operation completed successfully!
+        </div>
+        
+        <a href="/tenants/new" class="btn">Add New Tenant</a>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Roommate Of</th>
+                    <th>Property</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(tenants)}">
+                    <td colspan="7" style="text-align: center;">No tenants found</td>
+                </tr>
+                <tr th:each="tenant : ${tenants}">
+                    <td th:text="${tenant.id}"></td>
+                    <td th:text="${tenant.fullName}"></td>
+                    <td th:text="${tenant.email}"></td>
+                    <td th:text="${tenant.phone}"></td>
+                    <td th:text="${tenant.userId != null ? 'User ID: ' + tenant.userId : 'N/A'}"></td>
+                    <td th:text="${tenant.propertyId != null ? 'Property ID: ' + tenant.propertyId : 'N/A'}"></td>
+                    <td>
+                        <a th:href="@{/tenants/{id}(id=${tenant.id})}" class="btn">View</a>
+                        <a th:href="@{/tenants/{id}/edit(id=${tenant.id})}" class="btn">Edit</a>
+                        <form th:action="@{/tenants/{id}/delete(id=${tenant.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+

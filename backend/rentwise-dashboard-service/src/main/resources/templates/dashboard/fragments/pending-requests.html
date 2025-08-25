@@ -1,0 +1,38 @@
+<div th:fragment="pending-requests">
+    <p th:if="${pendingRequests == null || pendingRequests.isEmpty()}">No pending requests.</p>
+    
+    <table th:if="${pendingRequests != null && !pendingRequests.isEmpty()}">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Requested By</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="request : ${pendingRequests}">
+                <td th:text="${request.id}"></td>
+                <td th:text="${request.firstName + ' ' + request.lastName}"></td>
+                <td th:text="${request.email}"></td>
+                <td th:text="${request.phone}"></td>
+                <td th:text="${request.requestedByUserId}"></td>
+                <td>
+                    <span class="pending-badge" th:text="${request.status}"></span>
+                </td>
+                <td>
+                    <form th:action="@{'/dashboard/admin/tenants/requests/' + ${request.id} + '/approve'}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                    <form th:action="@{'/dashboard/admin/tenants/requests/' + ${request.id} + '/reject'}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+

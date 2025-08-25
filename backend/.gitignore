@@ -1,0 +1,22 @@
+# Logs
+logs/*.log
+logs/*.log.*
+!logs/.gitkeep
+
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.class
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

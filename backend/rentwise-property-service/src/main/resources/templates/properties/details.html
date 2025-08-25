@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Details - RentWise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .detail-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .detail-value {
+            color: #333;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Property Details</h1>
+        
+        <div class="detail-item">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value" th:text="${property.id}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Name:</span>
+            <span class="detail-value" th:text="${property.name}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Address:</span>
+            <span class="detail-value" th:text="${property.address}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">City:</span>
+            <span class="detail-value" th:text="${property.city}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">State:</span>
+            <span class="detail-value" th:text="${property.state}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Zip Code:</span>
+            <span class="detail-value" th:text="${property.zipCode}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value" th:text="${property.type}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Bedrooms:</span>
+            <span class="detail-value" th:text="${property.bedrooms}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Bathrooms:</span>
+            <span class="detail-value" th:text="${property.bathrooms}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Rent Amount:</span>
+            <span class="detail-value" th:text="${property.rentAmount}"></span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value" th:text="${property.status}"></span>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="http://localhost:8084/dashboard/home" class="btn" style="background-color: #28a745;">← Back to Dashboard</a>
+        <a th:href="@{/properties/{id}/edit(id=${property.id})}" class="btn">Edit</a>
+        <a href="/properties" class="btn">Back to List</a>
+        </div>
+    </div>
+</body>
+</html>
+

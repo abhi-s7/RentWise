@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - RentWise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .nav {
+            margin-top: 10px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .pending-badge {
+            background-color: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Admin Dashboard</h1>
+        <div class="nav">
+            <a href="/dashboard/admin">Dashboard</a>
+            <a href="/dashboard/home">Home</a>
+            <a href="/dashboard/logout">Logout</a>
+        </div>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- Property Management Section -->
+    <div class="section">
+        <h2>Property Management</h2>
+        <a href="http://localhost:8082/properties" target="_blank" class="btn btn-primary">Manage Properties</a>
+        <p>Total Properties: <strong th:text="${properties != null ? properties.size() : 0}">0</strong></p>
+        
+        <table th:if="${properties != null && !properties.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>Type</th>
+                    <th>Rent Amount</th>
+                    <th>Status</th>
+                    <th>Owner</th>
+                    <th>Tenants</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="property : ${properties}">
+                    <td th:text="${property.id}"></td>
+                    <td th:text="${property.name}"></td>
+                    <td th:text="${property.address}"></td>
+                    <td th:text="${property.city}"></td>
+                    <td th:text="${property.type}"></td>
+                    <td th:text="${property.rentAmount}"></td>
+                    <td th:text="${property.status}"></td>
+                    <td th:text="${property.ownerName != null ? property.ownerName : 'N/A'}"></td>
+                    <td th:text="${property.tenantCount != null ? property.tenantCount : 0}"></td>
+                    <td>
+                        <a th:href="@{'http://localhost:8082/properties/' + ${property.id}}" class="btn btn-primary">View</a>
+                        <a th:href="@{'http://localhost:8082/properties/' + ${property.id} + '/edit'}" class="btn btn-primary">Edit</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tenant Management Section -->
+    <div class="section">
+        <h2>Tenant Management</h2>
+        <a href="http://localhost:8083/tenants" target="_blank" class="btn btn-primary">Manage Tenants</a>
+        <p>Total Tenants: <strong th:text="${tenants != null ? tenants.size() : 0}">0</strong></p>
+        
+        <div id="tenants-container">
+            <table th:if="${tenants != null && !tenants.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Roommate Of</th>
+                        <th>Property</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="tenant : ${tenants}">
+                        <td th:text="${tenant.id}"></td>
+                        <td th:text="${tenant.firstName + ' ' + tenant.lastName}"></td>
+                        <td th:text="${tenant.email}"></td>
+                        <td th:text="${tenant.phone}"></td>
+                        <td th:text="${tenant.roommateOf != null ? tenant.roommateOf : 'N/A'}"></td>
+                        <td th:text="${tenant.propertyName != null ? tenant.propertyName : 'Not Assigned'}"></td>
+                        <td>
+                            <a th:href="@{'http://localhost:8083/tenants/' + ${tenant.id}}" class="btn btn-primary">View</a>
+                            <a th:href="@{'http://localhost:8083/tenants/' + ${tenant.id} + '/edit'}" class="btn btn-primary">Edit</a>
+                            <form th:action="@{'/dashboard/admin/tenants/' + ${tenant.id} + '/assign-property'}" method="post" style="display: inline-block; margin-left: 5px;">
+                                <select name="propertyId" required style="padding: 5px; margin-right: 5px;">
+                                    <option value="">Select Property</option>
+                                    <option th:each="property : ${properties}" 
+                                            th:value="${property.id}" 
+                                            th:text="${property.name + ' - ' + property.address}"
+                                            th:selected="${tenant.propertyId != null && tenant.propertyId == property.id}">
+                                    </option>
+                                </select>
+                                <button type="submit" class="btn" style="background-color: #28a745; color: white; padding: 5px 10px;">Assign</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pending Tenant Requests Section -->
+    <div class="section">
+        <h2>Pending Tenant Requests</h2>
+        <div id="pending-requests-container">
+            <p th:if="${pendingRequests == null || pendingRequests.isEmpty()}">No pending requests.</p>
+            
+            <table th:if="${pendingRequests != null && !pendingRequests.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Requested By</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="request : ${pendingRequests}">
+                        <td th:text="${request.id}"></td>
+                        <td th:text="${request.firstName + ' ' + request.lastName}"></td>
+                        <td th:text="${request.email}"></td>
+                        <td th:text="${request.phone}"></td>
+                        <td th:text="${request.requestedByUserId}"></td>
+                        <td>
+                            <span class="pending-badge" th:text="${request.status}"></span>
+                        </td>
+                        <td>
+                            <form th:action="@{'/dashboard/admin/tenants/requests/' + ${request.id} + '/approve'}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-success">Approve</button>
+                            </form>
+                            <form th:action="@{'/dashboard/admin/tenants/requests/' + ${request.id} + '/reject'}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-danger">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- WebSocket Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2/lib/stomp.min.js"></script>
+    <script>
+        (function() {
+            const socket = new SockJS('/ws');
+            const stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket Connected: ' + frame);
+                
+                stompClient.subscribe('/topic/notifications', function(message) {
+                    const event = JSON.parse(message.body);
+                    console.log('Received notification:', event);
+                    
+                    if (event.status === 'CREATED') {
+                        // Refresh pending requests section
+                        refreshPendingRequests();
+                    } else if (event.status === 'APPROVED') {
+                        // Refresh tenant management section
+                        refreshTenants();
+                        // Remove the approved request row from pending requests (smooth removal)
+                        removePendingRequest(event.requestId);
+                    }
+                });
+            }, function(error) {
+                console.error('WebSocket connection error:', error);
+            });
+            
+            function refreshPendingRequests() {
+                fetch('/dashboard/admin/pending-requests')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('pending-requests-container').innerHTML = html;
+                    })
+                    .catch(error => console.error('Error refreshing pending requests:', error));
+            }
+            
+            function refreshTenants() {
+                fetch('/dashboard/admin/tenants')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('tenants-container').innerHTML = html;
+                    })
+                    .catch(error => console.error('Error refreshing tenants:', error));
+            }
+            
+            function removePendingRequest(requestId) {
+                // Find and remove the specific request row
+                const container = document.getElementById('pending-requests-container');
+                const table = container.querySelector('table');
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const firstCell = row.querySelector('td');
+                        if (firstCell && firstCell.textContent.trim() === String(requestId)) {
+                            row.remove();
+                            // If this was the last row, refresh to show "No pending requests" message
+                            if (table.querySelectorAll('tbody tr').length === 0) {
+                                refreshPendingRequests();
+                            }
+                        }
+                    });
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
+

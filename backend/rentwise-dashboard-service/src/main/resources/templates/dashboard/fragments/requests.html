@@ -1,0 +1,31 @@
+<div th:fragment="requests">
+    <p th:if="${requests == null || requests.isEmpty()}">No requests submitted yet.</p>
+    
+    <table th:if="${requests != null && !requests.isEmpty()}">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Requested Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="request : ${requests}">
+                <td th:text="${request.id}"></td>
+                <td th:text="${request.firstName + ' ' + request.lastName}"></td>
+                <td th:text="${request.email}"></td>
+                <td th:text="${request.phone}"></td>
+                <td>
+                    <span th:classappend="${'status-' + request.status.toLowerCase()}" 
+                          class="status-badge" 
+                          th:text="${request.status}"></span>
+                </td>
+                <td th:text="${request.createdAt}"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+

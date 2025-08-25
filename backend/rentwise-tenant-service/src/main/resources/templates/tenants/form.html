@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tenant.id != null ? 'Edit Tenant' : 'Add Tenant'}">Tenant Form - RentWise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 20px;">
+            <a href="http://localhost:8084/dashboard/home" class="btn" style="background-color: #28a745;">← Back to Dashboard</a>
+        </div>
+        <h1 th:text="${tenant.id != null ? 'Edit Tenant' : 'Add New Tenant'}">Tenant Form</h1>
+        
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        
+        <form th:action="${tenant.id != null ? '/tenants/' + tenant.id : '/tenants'}" 
+              th:object="${tenant}" method="post">
+            <input type="hidden" th:field="*{id}"/>
+            
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" th:field="*{firstName}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" th:field="*{lastName}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" th:field="*{email}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" th:field="*{phone}"/>
+            </div>
+            
+            <div class="form-group">
+                <label for="dateOfBirth">Date of Birth:</label>
+                <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}"/>
+            </div>
+            
+            <div class="form-group">
+                <label for="emergencyContact">Emergency Contact:</label>
+                <input type="text" id="emergencyContact" th:field="*{emergencyContact}"/>
+            </div>
+            
+            <div class="form-group">
+                <label for="emergencyPhone">Emergency Phone:</label>
+                <input type="text" id="emergencyPhone" th:field="*{emergencyPhone}"/>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn">Save</button>
+                <a href="/tenants" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

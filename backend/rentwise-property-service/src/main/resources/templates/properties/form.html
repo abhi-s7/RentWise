@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${property.id != null ? 'Edit Property' : 'Add Property'}">Property Form - RentWise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 20px;">
+            <a href="http://localhost:8084/dashboard/home" class="btn" style="background-color: #28a745;">← Back to Dashboard</a>
+        </div>
+        <h1 th:text="${property.id != null ? 'Edit Property' : 'Add New Property'}">Property Form</h1>
+        
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        
+        <form th:action="${property.id != null ? '/properties/' + property.id : '/properties'}" 
+              th:object="${property}" method="post">
+            <input type="hidden" th:field="*{id}"/>
+            
+            <div class="form-group">
+                <label for="name">Property Name:</label>
+                <input type="text" id="name" th:field="*{name}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Address:</label>
+                <input type="text" id="address" th:field="*{address}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" id="city" th:field="*{city}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="state">State:</label>
+                <input type="text" id="state" th:field="*{state}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="zipCode">Zip Code:</label>
+                <input type="text" id="zipCode" th:field="*{zipCode}" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="type">Type:</label>
+                <select id="type" th:field="*{type}" required>
+                    <option value="">Select Type</option>
+                    <option value="APARTMENT">Apartment</option>
+                    <option value="HOUSE">House</option>
+                    <option value="CONDO">Condo</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="bedrooms">Bedrooms:</label>
+                <input type="number" id="bedrooms" th:field="*{bedrooms}" min="0"/>
+            </div>
+            
+            <div class="form-group">
+                <label for="bathrooms">Bathrooms:</label>
+                <input type="number" id="bathrooms" th:field="*{bathrooms}" min="0" step="0.5"/>
+            </div>
+            
+            <div class="form-group">
+                <label for="rentAmount">Rent Amount:</label>
+                <input type="number" id="rentAmount" th:field="*{rentAmount}" min="0" step="0.01" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select id="status" th:field="*{status}">
+                    <option value="AVAILABLE">Available</option>
+                    <option value="RENTED">Rented</option>
+                    <option value="MAINTENANCE">Maintenance</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn">Save</button>
+                <a href="/properties" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+
