@@ -76,6 +76,25 @@ public class UserService implements UserDetailsService {
         return user;
     }
     
+    public User authenticate(String username, String password) {
+        logger.info("[{}] [UserService] [authenticate] START - Authenticating user: {}", SERVICE_NAME, username);
+        try {
+            User user = findByUsername(username);
+            if (user == null) {
+                user = findByEmail(username);
+            }
+            if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+                logger.info("[{}] [UserService] [authenticate] SUCCESS - User authenticated: {}", SERVICE_NAME, username);
+                return user;
+            }
+            logger.warn("[{}] [UserService] [authenticate] Authentication failed for: {}", SERVICE_NAME, username);
+            return null;
+        } catch (Exception e) {
+            logger.error("[{}] [UserService] [authenticate] ERROR - {}", SERVICE_NAME, e.getMessage(), e);
+            return null;
+        }
+    }
+    
     public User getUserById(Long id) {
         logger.info("[{}] [UserService] [getUserById] START - Fetching user with ID: {}", SERVICE_NAME, id);
         User user = userRepository.findById(id).orElse(null);
@@ -102,6 +121,43 @@ public class UserService implements UserDetailsService {
         } catch (Exception e) {
             logger.error("[{}] [UserService] [save] ERROR - Failed to save user with ID: {} - Error: {}", 
                     SERVICE_NAME, user.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    public User updateUser(Long id, User updatedUser) throws Exception {
+        logger.info("[{}] [UserService] [updateUser] START - Updating user with ID: {}", SERVICE_NAME, id);
+        try {
+            User existingUser = getUserById(id);
+            if (existingUser == null) {
+                logger.warn("[{}] [UserService] [updateUser] User not found with ID: {}", SERVICE_NAME, id);
+                throw new Exception("User not found");
+            }
+            
+            // Check if email is being changed and if it already exists
+            if (updatedUser.getEmail() != null && !updatedUser.getEmail().equals(existingUser.getEmail())) {
+                if (userRepository.existsByEmail(updatedUser.getEmail())) {
+                    logger.warn("[{}] [UserService] [updateUser] Email already exists: {}", SERVICE_NAME, updatedUser.getEmail());
+                    throw new Exception("Email already exists");
+                }
+                existingUser.setEmail(updatedUser.getEmail());
+            }
+            
+            // Update password only if provided and not empty
+            if (updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty()) {
+                logger.debug("[{}] [UserService] [updateUser] Encoding new password for user ID: {}", SERVICE_NAME, id);
+                existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+            }
+            
+            // Username cannot be changed (it's unique and used for authentication)
+            // Role and enabled status should not be changed via profile update (admin only)
+            
+            User savedUser = userRepository.save(existingUser);
+            logger.info("[{}] [UserService] [updateUser] SUCCESS - User updated with ID: {}", SERVICE_NAME, id);
+            return savedUser;
+        } catch (Exception e) {
+            logger.error("[{}] [UserService] [updateUser] ERROR - Failed to update user with ID: {} - Error: {}", 
+                    SERVICE_NAME, id, e.getMessage(), e);
             throw e;
         }
     }

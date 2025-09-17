@@ -18,13 +18,17 @@ public class GatewayConfig {
         logger.info("[{}] [GatewayConfig] [gatewayRoutes] START - Configuring API Gateway routes", SERVICE_NAME);
         try {
             RouteLocator routeLocator = builder.routes()
-                    .route(r -> r.path("/api/users/**")
+                    .route("dashboard-api", r -> r.path("/api/dashboard/**")
+                            .uri("lb://rentwise-dashboard-service"))
+                    .route("users-api", r -> r.path("/api/users/**")
                             .uri("lb://rentwise-user-service"))
-                    .route(r -> r.path("/api/properties/**")
+                    .route("properties-api", r -> r.path("/api/properties/**")
                             .uri("lb://rentwise-property-service"))
-                    .route(r -> r.path("/api/tenants/**")
+                    .route("tenants-api", r -> r.path("/api/tenants/**")
                             .uri("lb://rentwise-tenant-service"))
-                    .route(r -> r.path("/dashboard/**", "/login/**")
+                    .route("dashboard-websocket", r -> r.path("/ws/**")
+                            .uri("lb://rentwise-dashboard-service"))
+                    .route("dashboard-web", r -> r.path("/dashboard/**", "/login/**")
                             .uri("lb://rentwise-dashboard-service"))
                     .build();
             
@@ -32,6 +36,8 @@ public class GatewayConfig {
             logger.info("[{}] [GatewayConfig] [gatewayRoutes] Route: /api/users/** -> lb://rentwise-user-service", SERVICE_NAME);
             logger.info("[{}] [GatewayConfig] [gatewayRoutes] Route: /api/properties/** -> lb://rentwise-property-service", SERVICE_NAME);
             logger.info("[{}] [GatewayConfig] [gatewayRoutes] Route: /api/tenants/** -> lb://rentwise-tenant-service", SERVICE_NAME);
+            logger.info("[{}] [GatewayConfig] [gatewayRoutes] Route: /api/dashboard/** -> lb://rentwise-dashboard-service", SERVICE_NAME);
+            logger.info("[{}] [GatewayConfig] [gatewayRoutes] Route: /ws/** -> lb://rentwise-dashboard-service", SERVICE_NAME);
             logger.info("[{}] [GatewayConfig] [gatewayRoutes] Route: /dashboard/** -> lb://rentwise-dashboard-service", SERVICE_NAME);
             
             return routeLocator;

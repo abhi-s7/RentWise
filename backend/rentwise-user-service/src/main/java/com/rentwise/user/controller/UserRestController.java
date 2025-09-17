@@ -1,5 +1,6 @@
 package com.rentwise.user.controller;
 
+import com.rentwise.user.model.LoginRequest;
 import com.rentwise.user.model.User;
 import com.rentwise.user.service.UserService;
 import org.slf4j.Logger;
@@ -83,6 +84,48 @@ public class UserRestController {
         } catch (Exception e) {
             logger.error("[{}] [UserRestController] [getUserByUsername] ERROR - {}", SERVICE_NAME, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        logger.info("[{}] [UserRestController] [login] START - Login attempt for username: {}", SERVICE_NAME, request.getUsername());
+        try {
+            User user = userService.authenticate(request.getUsername(), request.getPassword());
+            if (user != null) {
+                logger.info("[{}] [UserRestController] [login] SUCCESS - User authenticated: {}", SERVICE_NAME, request.getUsername());
+                // Return user without password
+                user.setPassword(null);
+                return ResponseEntity.ok(user);
+            }
+            logger.warn("[{}] [UserRestController] [login] Authentication failed for username: {}", SERVICE_NAME, request.getUsername());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        } catch (Exception e) {
+            logger.error("[{}] [UserRestController] [login] ERROR - {}", SERVICE_NAME, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
+        logger.info("[{}] [UserRestController] [updateUser] START - Updating user with ID: {}", SERVICE_NAME, id);
+        try {
+            User existingUser = userService.getUserById(id);
+            if (existingUser == null) {
+                logger.warn("[{}] [UserRestController] [updateUser] User not found with ID: {}", SERVICE_NAME, id);
+                return ResponseEntity.notFound().build();
+            }
+            
+            // Update user profile (username cannot be changed)
+            User savedUser = userService.updateUser(id, updatedUser);
+            // Return user without password
+            savedUser.setPassword(null);
+            logger.info("[{}] [UserRestController] [updateUser] SUCCESS - User updated with ID: {}", SERVICE_NAME, id);
+            return ResponseEntity.ok(savedUser);
+        } catch (Exception e) {
+            logger.error("[{}] [UserRestController] [updateUser] ERROR - Failed to update user with ID: {} - Error: {}", 
+                    SERVICE_NAME, id, e.getMessage(), e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
