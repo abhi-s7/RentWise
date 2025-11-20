@@ -2,13 +2,15 @@ import { Provider, useSelector } from 'react-redux';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { store } from './store/store';
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import PropertiesPage from './pages/properties/PropertiesPage';
 import TenantsPage from './pages/tenants/TenantsPage';
 import ProfileEditPage from './pages/profile/ProfileEditPage';
 import type { RootState } from './store/store';
+import type { ReactElement } from 'react';
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children: ReactElement }) => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -21,6 +23,7 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/dashboard"
           element={

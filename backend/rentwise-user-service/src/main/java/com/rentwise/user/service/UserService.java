@@ -1,5 +1,6 @@
 package com.rentwise.user.service;
 
+import com.rentwise.user.client.TenantServiceClient;
 import com.rentwise.user.model.User;
 import com.rentwise.user.repository.UserRepository;
 import org.slf4j.Logger;
@@ -11,7 +12,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -21,11 +24,13 @@ public class UserService implements UserDetailsService {
     
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final TenantServiceClient tenantServiceClient;
     
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, TenantServiceClient tenantServiceClient) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
+        this.tenantServiceClient = tenantServiceClient;
         logger.info("[{}] [UserService] [Constructor] UserService initialized successfully", SERVICE_NAME);
     }
     
@@ -46,6 +51,27 @@ public class UserService implements UserDetailsService {
             
             User savedUser = userRepository.save(user);
             logger.info("[{}] [UserService] [registerUser] SUCCESS - User registered successfully with ID: {}", SERVICE_NAME, savedUser.getId());
+            
+            // If user role is USER, create corresponding tenant record
+            if ("USER".equalsIgnoreCase(savedUser.getRole())) {
+                try {
+                    logger.info("[{}] [UserService] [registerUser] Creating tenant record for user: {}", SERVICE_NAME, savedUser.getUsername());
+                    Map<String, Object> tenantData = new HashMap<>();
+                    tenantData.put("firstName", savedUser.getUsername()); // Use username as firstName
+                    tenantData.put("lastName", ""); // Empty lastName
+                    tenantData.put("email", savedUser.getEmail());
+                    tenantData.put("phone", ""); // Empty phone
+                    tenantData.put("userId", savedUser.getId());
+                    
+                    tenantServiceClient.createTenant(tenantData);
+                    logger.info("[{}] [UserService] [registerUser] Tenant record created successfully for user: {}", SERVICE_NAME, savedUser.getUsername());
+                } catch (Exception e) {
+                    // Log error but don't fail user registration if tenant creation fails
+                    logger.error("[{}] [UserService] [registerUser] Failed to create tenant record for user: {} - Error: {}", 
+                            SERVICE_NAME, savedUser.getUsername(), e.getMessage());
+                }
+            }
+            
             return savedUser;
         } catch (Exception e) {
             logger.error("[{}] [UserService] [registerUser] ERROR - Failed to register user: {} - Error: {}", 

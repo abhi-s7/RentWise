@@ -1,43 +1,51 @@
-import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { setAuth } from '../../store/slices/authSlice';
-import axiosInstance from '../../services/api/axiosInstance';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { registerUser, type RegisterUserPayload } from '../../services/api/userService';
 
-const LoginPage = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+const RegisterPage = () => {
+  const [formData, setFormData] = useState<RegisterUserPayload>({
+    username: '',
+    email: '',
+    password: '',
+    role: 'USER'
+  });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
-  useEffect(() => {
-    // Check if user was redirected after successful registration
-    if (searchParams.get('registered') === 'true') {
-      setSuccess('Registration successful! Please login with your credentials.');
-    }
-  }, [searchParams]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate passwords match
+    if (formData.password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await axiosInstance.post('/api/users/login', {
-        username,
-        password,
-      });
-
-      if (response.data) {
-        dispatch(setAuth({ user: response.data, token: 'token-' + response.data.id }));
-        navigate('/dashboard');
-      }
+      await registerUser(formData);
+      // Redirect to login page with success message
+      navigate('/login?registered=true');
     } catch (err: any) {
-      setError(err.response?.data || 'Login failed. Please try again.');
+      setError(err.response?.data || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,7 +75,7 @@ const LoginPage = () => {
           textAlign: 'center',
           color: '#111827'
         }}>
-          Login
+          Register
         </h1>
         
         {error && (
@@ -84,20 +92,6 @@ const LoginPage = () => {
           </div>
         )}
 
-        {success && (
-          <div style={{
-            backgroundColor: '#d1fae5',
-            border: '1px solid #86efac',
-            color: '#065f46',
-            padding: '12px',
-            borderRadius: '6px',
-            marginBottom: '20px',
-            fontSize: '14px'
-          }}>
-            {success}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{ 
@@ -107,12 +101,67 @@ const LoginPage = () => {
               fontWeight: '600', 
               marginBottom: '8px' 
             }}>
-              Username or Email
+              Username
             </label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '16px',
+                boxSizing: 'border-box'
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              color: '#374151', 
+              fontSize: '14px', 
+              fontWeight: '600', 
+              marginBottom: '8px' 
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '16px',
+                boxSizing: 'border-box'
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              color: '#374151', 
+              fontSize: '14px', 
+              fontWeight: '600', 
+              marginBottom: '8px' 
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -133,12 +182,12 @@ const LoginPage = () => {
               fontWeight: '600', 
               marginBottom: '8px' 
             }}>
-              Password
+              Confirm Password
             </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -174,7 +223,7 @@ const LoginPage = () => {
               if (!loading) e.currentTarget.style.backgroundColor = '#2563eb';
             }}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Registering...' : 'Register'}
           </button>
 
           <div style={{
@@ -182,16 +231,16 @@ const LoginPage = () => {
             fontSize: '14px',
             color: '#6b7280'
           }}>
-            Don't have an account?{' '}
+            Already have an account?{' '}
             <Link 
-              to="/register" 
+              to="/login" 
               style={{
                 color: '#2563eb',
                 textDecoration: 'none',
                 fontWeight: '600'
               }}
             >
-              Register here
+              Login here
             </Link>
           </div>
         </form>
@@ -200,5 +249,5 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
 

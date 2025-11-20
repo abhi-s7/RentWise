@@ -1,0 +1,31 @@
+# Ignore files that don't need to be in Docker build context
+# This makes builds faster and images smaller
+
+# Maven build output
+target/
+*.jar
+*.war
+
+# Logs
+logs/
+*.log
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Test files (not needed in production)
+*.test
+test/
+

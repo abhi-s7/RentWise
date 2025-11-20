@@ -1,0 +1,238 @@
+# Docker Compose configuration for RentWise application
+# This file defines all services and how they work together
+
+version: '3.8'
+
+# Define all services (containers) that will run
+services:
+  # MySQL Database Service
+  # This provides database for all microservices
+  mysql:
+    image: mysql:8.0
+    container_name: rentwise-mysql
+    # Environment variables for MySQL configuration
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: rentwise_user_db
+    # Mount volumes for data persistence and initialization
+    volumes:
+      # Persistent storage for database data (survives container restarts)
+      - mysql-data:/var/lib/mysql
+      # Database initialization script (runs only on first startup)
+      - ./backend/database-setup.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
+    # Expose port 3306 to host machine
+    ports:
+      - "3306:3306"
+    # Health check to ensure MySQL is ready before other services start
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Connect to our custom network
+    networks:
+      - rentwise-network
+
+  # RabbitMQ Message Queue Service
+  # Used for asynchronous messaging between services
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rentwise-rabbitmq
+    # Expose ports: 5672 for AMQP, 15672 for management UI
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    # Persistent storage for RabbitMQ data
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    # Health check
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - rentwise-network
+
+  # Eureka Discovery Server
+  # Service registry - all microservices register here
+  eureka-server:
+    build:
+      context: ./backend/rentwise-discovery-server
+      dockerfile: Dockerfile
+    container_name: rentwise-discovery-server
+    # Expose port 8761 for Eureka dashboard
+    ports:
+      - "8761:8761"
+    # Environment variables
+    environment:
+      - LOG_PATH=/app/logs
+    # Mount logs directory
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - rentwise-network
+
+  # API Gateway Service
+  # Single entry point for all frontend requests
+  api-gateway:
+    build:
+      context: ./backend/rentwise-api-gateway
+      dockerfile: Dockerfile
+    container_name: rentwise-api-gateway
+    # Wait for Eureka to be ready
+    depends_on:
+      eureka-server:
+        condition: service_started
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL=http://eureka-server:8761/eureka
+      - LOG_PATH=/app/logs
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8080:8080"
+    networks:
+      - rentwise-network
+
+  # User Service
+  # Handles user authentication and management
+  user-service:
+    build:
+      context: ./backend/rentwise-user-service
+      dockerfile: Dockerfile
+    container_name: rentwise-user-service
+    # Wait for MySQL and Eureka to be ready
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      # Database connection (use service name 'mysql' instead of localhost)
+      - SPRING_DATASOURCE_URL=${USER_DB_URL:-jdbc:mysql://mysql:3306/rentwise_user_db?useSSL=false&allowPublicKeyRetrieval=true}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-password}
+      # Eureka connection
+      - EUREKA_CLIENT_SERVICE_URL=${EUREKA_URL:-http://eureka-server:8761/eureka}
+      - LOG_PATH=/app/logs
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8081:8081"
+    networks:
+      - rentwise-network
+
+  # Property Service
+  # Manages property information
+  property-service:
+    build:
+      context: ./backend/rentwise-property-service
+      dockerfile: Dockerfile
+    container_name: rentwise-property-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=${PROPERTY_DB_URL:-jdbc:mysql://mysql:3306/rentwise_property_db?useSSL=false&allowPublicKeyRetrieval=true}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-password}
+      - EUREKA_CLIENT_SERVICE_URL=${EUREKA_URL:-http://eureka-server:8761/eureka}
+      - LOG_PATH=/app/logs
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8082:8082"
+    networks:
+      - rentwise-network
+
+  # Tenant Service
+  # Manages tenant information and roommate requests
+  tenant-service:
+    build:
+      context: ./backend/rentwise-tenant-service
+      dockerfile: Dockerfile
+    container_name: rentwise-tenant-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=${TENANT_DB_URL:-jdbc:mysql://mysql:3306/rentwise_tenant_db?useSSL=false&allowPublicKeyRetrieval=true}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-password}
+      - EUREKA_CLIENT_SERVICE_URL=${EUREKA_URL:-http://eureka-server:8761/eureka}
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - LOG_PATH=/app/logs
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8083:8083"
+    networks:
+      - rentwise-network
+
+  # Dashboard Service
+  # Aggregates data and provides WebSocket notifications
+  dashboard-service:
+    build:
+      context: ./backend/rentwise-dashboard-service
+      dockerfile: Dockerfile
+    container_name: rentwise-dashboard-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL=http://eureka-server:8761/eureka
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - LOG_PATH=/app/logs
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8084:8084"
+    networks:
+      - rentwise-network
+
+  # Frontend Service
+  # React application served by nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rentwise-frontend
+    # Wait for API Gateway to be ready
+    depends_on:
+      api-gateway:
+        condition: service_started
+    # Expose port 80 (nginx default)
+    ports:
+      - "5173:80"
+    networks:
+      - rentwise-network
+
+# Define volumes for data persistence
+# These volumes store data even when containers are removed
+volumes:
+  mysql-data:
+    # MySQL database files
+  rabbitmq-data:
+    # RabbitMQ data and messages
+
+# Define custom network
+# All services on this network can communicate using service names
+networks:
+  rentwise-network:
+    driver: bridge
+    # Bridge network allows containers to communicate with each other
+

@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../../store/store';
 import { setAuth } from '../../store/slices/authSlice';
-import { getUserById, updateUser, type User } from '../../services/api/userService';
+import { getUserById, updateUser, type User, type UpdateUserPayload } from '../../services/api/userService';
 
 const ProfileEditPage = () => {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
@@ -69,7 +69,7 @@ const ProfileEditPage = () => {
 
     try {
       setSaving(true);
-      const updatePayload: Partial<User> = {
+      const updatePayload: UpdateUserPayload = {
         email: formData.email,
       };
 

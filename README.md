@@ -2,7 +2,64 @@
 
 A full-stack microservices application for managing rental properties, tenants, and roommate requests. Built with Spring Boot microservices and React frontend.
 
-## Quick Start
+## Quick Start with Docker (Recommended)
+
+### Prerequisites
+- Docker Desktop installed and running
+
+### Run the Application
+
+1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd RentWise
+```
+
+2. **Start all services:**
+```bash
+docker-compose up --build
+```
+
+This will automatically:
+- Build all microservices and frontend
+- Start MySQL and create databases
+- Start RabbitMQ
+- Start all 6 microservices
+- Start the React frontend
+
+3. **Access the application:**
+- **Frontend**: http://localhost:5173
+- **Eureka Dashboard**: http://localhost:8761
+- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
+- **API Gateway**: http://localhost:8080
+
+### Common Docker Commands
+
+```bash
+# Start in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Stop and remove all data (clean slate)
+docker-compose down -v
+```
+
+### Default Login
+
+After first startup, a default admin user is created:
+- Username: `admin`
+- Password: `admin123`
+
+You can also register a new user from the login page.
+
+## Manual Setup (Alternative)
+
+If you prefer to run services manually without Docker:
 
 ### Prerequisites
 - Java 17+
@@ -11,32 +68,21 @@ A full-stack microservices application for managing rental properties, tenants, 
 - RabbitMQ
 - Maven 3.6+
 
-### Clone the Repository
-```bash
-git clone <repository-url>
-cd RentWise
-```
-
-## Setup
-
 ### 1. Database Setup
-Create the MySQL databases:
 ```bash
 mysql -u root -p < backend/database-setup.sql
 ```
 
-Or manually create these databases:
+Or manually create:
 - `rentwise_user_db`
 - `rentwise_property_db`
 - `rentwise_tenant_db`
 
-Default MySQL credentials (update in `application.properties` if needed):
-- Username: `root`
-- Password: `password`
+Default credentials: `root` / `password`
 
 ### 2. RabbitMQ Setup
 
-**Using Docker (Recommended):**
+**Using Docker:**
 ```bash
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 ```
@@ -47,14 +93,11 @@ brew install rabbitmq
 brew services start rabbitmq
 ```
 
-**Manual Installation:**
-Download from [rabbitmq.com](https://www.rabbitmq.com/download.html) and start the service.
-
-Access RabbitMQ Management UI at: `http://localhost:15672` (guest/guest)
+Access RabbitMQ UI: http://localhost:15672 (guest/guest)
 
 ### 3. Start Backend Services
 
-Start services in this order:
+Start in this order:
 
 1. **Discovery Server** (Port 8761)
 ```bash
@@ -178,23 +221,25 @@ Frontend runs on: `http://localhost:5173`
 - Vite
 - WebSocket (STOMP over SockJS)
 
-## Default Login
-
-After first run, you can register a new user or use existing credentials:
-- Username: `root` (if exists)
-- Password: (as configured)
-
 ## Notes
 
 - All services register with Eureka for service discovery
 - API Gateway handles CORS and routes all frontend requests
-- Thymeleaf is disabled - services are pure REST APIs
 - Database tables are auto-created by Hibernate on first run
-- Logs are stored in the `logs/` directory
+- Sample properties are inserted automatically on first database setup
+- Default admin user is created automatically on first startup
+- Logs are stored in `backend/logs/` directory
+- Database data persists in Docker volumes
 
 ## Troubleshooting
 
-**Services won't start:**
+**Docker services won't start:**
+- Check if ports are already in use: `lsof -i :8080`
+- Verify Docker Desktop is running
+- Check service logs: `docker-compose logs [service-name]`
+- Ensure MySQL container is healthy: `docker-compose ps mysql`
+
+**Services won't start (manual setup):**
 - Check if MySQL is running
 - Verify RabbitMQ is running (for Tenant and Dashboard services)
 - Ensure ports are not already in use
@@ -208,4 +253,9 @@ After first run, you can register a new user or use existing credentials:
 - Check RabbitMQ is running
 - Verify Dashboard Service is running
 - Check browser console for connection errors
+
+**Database connection issues (Docker):**
+- Wait for MySQL container to be healthy before services start
+- Check MySQL logs: `docker-compose logs mysql`
+- Verify database credentials in docker-compose.yml
 
